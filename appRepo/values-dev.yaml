@@ -7,7 +7,7 @@ replicaCount: 2
 
 # For Minikube demo with NGINX ingress add-on
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   hosts:
     - host: demo.local
