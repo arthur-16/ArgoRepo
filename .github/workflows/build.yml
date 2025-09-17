@@ -1,17 +1,20 @@
 name: build-and-pin
 on:
   push:
-    branches: [ main ] # adjust if needed
+    branches: [ main ]   # adjust if you use a different default branch
 
-# Let Actions push to GHCR and commit back to the repo
 permissions:
-  contents: write
-  packages: write
+  contents: write    # commit values-dev.yaml changes
+  packages: write    # push to GHCR
 
 env:
-  IMAGE_NAME: demo             # repo name within GHCR (change if you want)
-  CHART_PATH: demo             # path to your Helm chart in this repo
+  IMAGE_REPO: ghcr.io/arthur-16/demo
+  CHART_PATH: demo
   VALUES_FILE: demo/values-dev.yaml
+
+concurrency:
+  group: build-and-pin-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -30,17 +33,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Optional: cache layers for faster builds
-      - name: Docker metadata
+      - name: Derive tags
         id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,format=short
-            type=raw,value=dev
+        run: |
+          SHORT_SHA="$(git rev-parse --short=12 HEAD)"
+          echo "tags=${{ env.IMAGE_REPO }}:${SHORT_SHA},${{ env.IMAGE_REPO }}:dev" >> "$GITHUB_OUTPUT"
 
-      - name: Build & push (multi-arch optional)
+      - name: Build & push image
         id: build
         uses: docker/build-push-action@v6
         with:
@@ -48,11 +47,9 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
 
-      # 'build' step returns the immutable digest of the pushed image
       - name: Show digest
-        run: echo "DIGEST=${{ steps.build.outputs.digest }}"
+        run: echo "Digest => ${{ steps.build.outputs.digest }}"
 
       - name: Install yq
         run: |
@@ -62,9 +59,5 @@ jobs:
         run: |
           DIGEST="${{ steps.build.outputs.digest }}"
           test -n "$DIGEST"
-          yq -i ".image.repository = \"ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}\"" "${{ env.VALUES_FILE }}"
-          yq -i ".image.digest = \"${DIGEST}\"" "${{ env.VALUES_FILE }}"
-          git config user.name  "ci-bot"
-          git config user.email "ci@example.com"
-          git commit -am "Pin image to ${DIGEST}"
-          git push
+          yq -i ".image.repository = \"${{ env.IMAGE_REPO }}\"" "${{ env.VALUES_FILE }}"
+          yq -i ".image.digest = \"${
