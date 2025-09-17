@@ -1,10 +1,10 @@
 on:
   push:
-    branches: [ main ]   # adjust if you use a different default branch
+    branches: [ main ]   
 
 permissions:
-  contents: write    # commit values-dev.yaml changes
-  packages: write    # push to GHCR
+  contents: write    
+  packages: write    
 
 env:
   IMAGE_REPO: ghcr.io/arthur-16/argorepo
@@ -42,7 +42,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: .           # <— folder with Dockerfile/server.py
+          context: .           
           file: ./app/Dockerfile
           push: true
           platforms: linux/amd64
@@ -57,8 +57,8 @@ jobs:
       
       - name: Pin digest in Helm values
         env:
-          IMAGE_REPO: ghcr.io/arthur-16/demo          # or your actual repo
-          VALUES_FILE: demo/values-dev.yaml           # <-- make sure this path exists
+          IMAGE_REPO: ghcr.io/arthur-16/argorepo          
+          VALUES_FILE: appRepo/values-dev.yaml           
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           test -n "$DIGEST"
