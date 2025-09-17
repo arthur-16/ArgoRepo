@@ -43,7 +43,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: ./app           # <— folder with Dockerfile/server.py
+          context: .           # <— folder with Dockerfile/server.py
           file: ./app/Dockerfile
           push: true
           platforms: linux/amd64
