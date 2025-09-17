@@ -7,7 +7,7 @@ permissions:
   packages: write    # push to GHCR
 
 env:
-  IMAGE_REPO: ghcr.io/arthur-16/ArgoRepo
+  IMAGE_REPO: ghcr.io/arthur-16/argorepo
   CHART_PATH: appRepo
   VALUES_FILE: appRepo/values-dev.yaml
 
