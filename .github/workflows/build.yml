@@ -52,13 +52,19 @@ jobs:
       - name: Show digest
         run: echo "Digest => ${{ steps.build.outputs.digest }}"
 
-      - name: Install yq
-        run: |
-          pipx install yq || pip install yq || true
-
+      - name: Install yq (mikefarah/go-yq)
+        uses: mikefarah/yq@v4.44.3
+      
       - name: Pin digest in Helm values
+        env:
+          IMAGE_REPO: ghcr.io/arthur-16/demo          # or your actual repo
+          VALUES_FILE: demo/values-dev.yaml           # <-- make sure this path exists
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          DIGEST="${{ steps.build.outputs.digest }}"
           test -n "$DIGEST"
-          yq -i ".image.repository = \"${{ env.IMAGE_REPO }}\"" "${{ env.VALUES_FILE }}"
-          yq -i ".image.digest = \"${
+          yq -i '.image.repository = strenv(IMAGE_REPO)' "$VALUES_FILE"
+          yq -i '.image.digest = strenv(DIGEST)' "$VALUES_FILE"
+          git config user.name  "ci-bot"
+          git config user.email "ci@example.com"
+          git commit -am "Pin image to ${DIGEST}"
+          git push
