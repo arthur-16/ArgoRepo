@@ -1,4 +1,3 @@
-name: build-and-pin
 on:
   push:
     branches: [ main ]   # adjust if you use a different default branch
@@ -8,9 +7,9 @@ permissions:
   packages: write    # push to GHCR
 
 env:
-  IMAGE_REPO: ghcr.io/arthur-16/demo
-  CHART_PATH: demo
-  VALUES_FILE: demo/values-dev.yaml
+  IMAGE_REPO: ghcr.io/arthur-16/ArgoRepo
+  CHART_PATH: appRepo
+  VALUES_FILE: appRepo/values-dev.yaml
 
 concurrency:
   group: build-and-pin-${{ github.ref }}
