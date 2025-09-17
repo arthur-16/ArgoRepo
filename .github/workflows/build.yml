@@ -43,10 +43,12 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./app           # <— folder with Dockerfile/server.py
+          file: ./app/Dockerfile
           push: true
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
+
 
       - name: Show digest
         run: echo "Digest => ${{ steps.build.outputs.digest }}"
