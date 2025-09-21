@@ -22,6 +22,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Enable emulation so we can build arm64 on x86 runners
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -38,27 +42,26 @@ jobs:
           SHORT_SHA="$(git rev-parse --short=12 HEAD)"
           echo "tags=${{ env.IMAGE_REPO }}:${SHORT_SHA},${{ env.IMAGE_REPO }}:dev" >> "$GITHUB_OUTPUT"
 
-      - name: Build & push image
+      - name: Build & push multi-arch image
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: .           
+          context: ./app
           file: ./app/Dockerfile
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64       # ← key change
           tags: ${{ steps.meta.outputs.tags }}
 
-
-      - name: Show digest
+      - name: Show index digest (for pinning)
         run: echo "Digest => ${{ steps.build.outputs.digest }}"
 
-      - name: Install yq (mikefarah/go-yq)
+      - name: Install yq
         uses: mikefarah/yq@v4.44.3
-      
+
       - name: Pin digest in Helm values
         env:
-          IMAGE_REPO: ghcr.io/arthur-16/argorepo          
-          VALUES_FILE: appRepo/values-dev.yaml           
+          IMAGE_REPO: ghcr.io/arthur-16/demo
+          VALUES_FILE: appRepo/values-dev.yaml
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           test -n "$DIGEST"
@@ -68,3 +71,4 @@ jobs:
           git config user.email "ci@example.com"
           git commit -am "Pin image to ${DIGEST}"
           git push
+
