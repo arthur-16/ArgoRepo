@@ -1,10 +1,8 @@
 # Dev overlay. CI writes the immutable image digest here.
 image:
-  repository: ghcr.io/arthur-16/ArgoDemo
-  digest: "sha256:REPLACED_BY_CI"
-
+  repository: ghcr.io/arthur-16/argorepo
+  digest: "sha256:f00280b77b1144cc57ac145b7b246a34b2a22a9023363bb86fa528cd898431d3"
 replicaCount: 2
-
 # For Minikube demo with NGINX ingress add-on
 ingress:
   enabled: true
