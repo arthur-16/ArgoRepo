@@ -26,4 +26,4 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.hpa.memory.averageUtilization }}
     {{- end }}
-{{- end }}
+# {{- end }}
