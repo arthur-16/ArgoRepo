@@ -1,0 +1,85 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/your-org/demo
+  # Prefer immutable digests. If you *must* use tag during local dev,
+  # set image.tag and leave image.digest empty (template prefers digest).
+  tag: ""
+  digest: "sha256:PLACEHOLDER"   # CI replaces this with the real digest
+  pullPolicy: IfNotPresent
+  pullSecrets: []                 # e.g., [my-regcred]
+
+service:
+  type: ClusterIP
+  port: 80
+
+containerPort: 8080
+
+# Basic probes
+readinessProbe:
+  path: /healthz
+  initialDelaySeconds: 3
+  periodSeconds: 5
+livenessProbe:
+  path: /healthz
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+nodeSelector: {}
+
+affinity: {}
+
+tolerations: []
+
+# Ingress (optional)
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: demo.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# HPA (optional) — enable to demonstrate scaling
+hpa:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  cpu:
+    enabled: true
+    averageUtilization: 60
+  memory:
+    enabled: false
+    averageUtilization: 80
+
+# PDB (optional)
+pdb:
+  enabled: false
+  minAvailable: 1
+
+# NetworkPolicy (optional)
+networkPolicy:
+  enabled: false
+  allowFromNamespaces: []  # e.g., [kube-system]
