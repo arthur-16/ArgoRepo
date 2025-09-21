@@ -1,14 +1,25 @@
 {{- if .Values.ingress.enabled }}
+{{- $fullName := include "demo.fullname" . }}
+{{- $className := .Values.ingress.className | default "" }}
+{{- $hasExplicitHosts := .Values.ingress.hosts }}
+{{- $baseDomain := .Values.ingress.baseDomain | default "local" }}
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "demo.fullname" . }}
+  name: {{ $fullName }}
+  labels:
+    {{- include "demo.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
-    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
+  {{- if $className }}
+  ingressClassName: {{ $className }}
+  {{- end }}
+
+  {{- if $hasExplicitHosts }}
   rules:
     {{- range .Values.ingress.hosts }}
     - host: {{ .host | quote }}
@@ -16,16 +27,40 @@ spec:
         paths:
           {{- range .paths }}
           - path: {{ .path }}
-            pathType: {{ .pathType }}
+            pathType: {{ .pathType | default "Prefix" }}
             backend:
               service:
-                name: {{ include "demo.fullname" $ }}
+                name: {{ $fullName }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
     {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- else }}
+  # Default: one host computed from release name → "<release>.<baseDomain>"
+  rules:
+    - host: {{ printf "%s.%s" .Release.Name $baseDomain | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ .Values.service.port }}
+  {{- end }}
+
+  {{- if .Values.ingress.tls.enabled }}
   tls:
-    {{- toYaml .Values.ingress.tls | nindent 2 }}
+    - hosts:
+        {{- if $hasExplicitHosts }}
+        {{- range .Values.ingress.hosts }}
+        - {{ .host | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ printf "%s.%s" .Release.Name $baseDomain | quote }}
+        {{- end }}
+      secretName: {{ .Values.ingress.tls.secretName | default (printf "%s-tls" $fullName) }}
   {{- end }}
 {{- end }}
+
