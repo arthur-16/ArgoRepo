@@ -1,5 +1,2 @@
-<<<<<<< HEAD
 flask==3.0.3
-=======
-flask==3.0.3
->>>>>>> dc6368b (Initializing git connection)
+
