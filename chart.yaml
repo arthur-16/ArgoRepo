@@ -1,6 +1,13 @@
 apiVersion: v2
 name: demo
-version: 0.1.0
-appVersion: "1.16.0"
-description: Small demo app chart, immutable-by-digest, Argo CD friendly
+description: GitOps Demo Application - Live Scaling & Updates
 type: application
+version: 1.0.0
+appVersion: "demo-v1.0"
+keywords:
+  - demo
+  - gitops
+  - argocd
+  - scaling
+maintainers:
+  - name: Demo Team

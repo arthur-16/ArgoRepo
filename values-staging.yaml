@@ -1,0 +1,24 @@
+# Staging Environment - Production-like Configuration
+replicaCount: 3
+
+demo:
+  message: "GitOps Demo - Staging Environment 🎯"
+  version: "staging-v1.0"
+  environment: "staging"
+
+ingress:
+  host: demo-staging.local
+
+resources:
+  requests:
+    cpu: 75m
+    memory: 96Mi
+  limits:
+    cpu: 150m
+    memory: 192Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 70

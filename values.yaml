@@ -1,85 +1,58 @@
-replicaCount: 2
+# Demo Application Configuration
+# This file demonstrates GitOps principles with live updates
+
+replicaCount: 1
+maxReplicas: 10
 
 image:
-  repository: ghcr.io/arthur-16/ArgoRepo
-  # Prefer immutable digests. If you *must* use tag during local dev,
-  # set image.tag and leave image.digest empty (template prefers digest).
-  tag: ""
-  digest: "sha256:PLACEHOLDER"   # CI replaces this with the real digest
+  repository: nginx
   pullPolicy: IfNotPresent
-  pullSecrets: []                 # e.g., [my-regcred]
+  tag: "1.21-alpine"
+
+# Demo message displayed by the application
+demo:
+  message: "GitOps Demo - Default Environment"
+  version: "v1.0"
+  environment: "default"
 
 service:
   type: ClusterIP
   port: 80
+  targetPort: 80
 
-containerPort: 8080
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  host: demo.local
+  path: /
+  pathType: Prefix
 
-# Basic probes
-readinessProbe:
-  path: /healthz
-  initialDelaySeconds: 3
-  periodSeconds: 5
-livenessProbe:
-  path: /healthz
-  initialDelaySeconds: 10
-  periodSeconds: 10
-
+# Resource requests optimized for demo scaling
 resources:
   requests:
     cpu: 50m
     memory: 64Mi
   limits:
-    cpu: 250m
-    memory: 256Mi
+    cpu: 100m
+    memory: 128Mi
 
-podSecurityContext:
-  runAsNonRoot: true
-  seccompProfile:
-    type: RuntimeDefault
+# Horizontal Pod Autoscaler for demo scaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
 
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop: ["ALL"]
-
+# Demo-friendly node selection
 nodeSelector: {}
-
+tolerations: []
 affinity: {}
 
-tolerations: []
-
-# Ingress (optional)
-ingress:
-  enabled: false
-  className: "nginx"
-  annotations: {}
-  hosts:
-    - host: demo.local
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-
-# HPA (optional) — enable to demonstrate scaling
-hpa:
-  enabled: false
-  minReplicas: 2
-  maxReplicas: 10
-  cpu:
-    enabled: true
-    averageUtilization: 60
-  memory:
-    enabled: false
-    averageUtilization: 80
-
-# PDB (optional)
-pdb:
-  enabled: false
-  minAvailable: 1
-
-# NetworkPolicy (optional)
-networkPolicy:
-  enabled: false
-  allowFromNamespaces: []  # e.g., [kube-system]
+# Health check configuration
+healthcheck:
+  enabled: true
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 10

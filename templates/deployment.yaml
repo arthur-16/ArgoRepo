@@ -3,53 +3,73 @@ kind: Deployment
 metadata:
   name: {{ include "demo.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "demo.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app: demo-app
+    demo.version: {{ .Values.demo.version | quote }}
+    demo.environment: {{ .Values.demo.environment | quote }}
+    {{- include "demo.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "demo.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      app: demo-app
+      {{- include "demo.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "demo.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app: demo-app
+        demo.version: {{ .Values.demo.version | quote }}
+        demo.environment: {{ .Values.demo.environment | quote }}
+        {{- include "demo.selectorLabels" . | nindent 8 }}
+      annotations:
+        # Force pod restart when demo config changes
+        demo.config/checksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-        {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-        {{- end }}
-      {{- end }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: app
-          {{- /* Prefer digest when set; fallback to tag for local dev */ -}}
-          {{- if .Values.image.digest }}
-          image: {{ printf "%s@%s" .Values.image.repository .Values.image.digest | quote }}
-          {{- else }}
-          image: {{ printf "%s:%s" .Values.image.repository (.Values.image.tag | default "latest") | quote }}
-          {{- end }}
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.containerPort }}
-              name: http
-          securityContext:
-            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.readinessProbe.path }}
-              port: http
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: DEMO_MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "demo.fullname" . }}-config
+                  key: message
+            - name: DEMO_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "demo.fullname" . }}-config
+                  key: version
+            - name: DEMO_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "demo.fullname" . }}-config
+                  key: environment
+          {{- if .Values.healthcheck.enabled }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.path }}
+              path: {{ .Values.healthcheck.path }}
               port: http
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          # Demo-friendly volume mount for custom content
+          volumeMounts:
+            - name: demo-config
+              mountPath: /usr/share/nginx/html/demo
+              readOnly: true
+      volumes:
+        - name: demo-config
+          configMap:
+            name: {{ include "demo.fullname" . }}-config

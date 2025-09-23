@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "demo.fullname" . }}-config
+  labels:
+    {{- include "demo.labels" . | nindent 4 }}
+data:
+  message: {{ .Values.demo.message | quote }}
+  version: {{ .Values.demo.version | quote }}
+  environment: {{ .Values.demo.environment | quote }}
+  
+  # Demo HTML content
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{{ .Values.demo.message }}</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; 
+                text-align: center; 
+                padding: 50px;
+                margin: 0;
+            }
+            .container { 
+                background: rgba(255,255,255,0.1); 
+                border-radius: 15px; 
+                padding: 40px; 
+                max-width: 600px; 
+                margin: 0 auto;
+                backdrop-filter: blur(10px);
+            }
+            .version { 
+                background: rgba(255,255,255,0.2); 
+                padding: 10px 20px; 
+                border-radius: 25px; 
+                display: inline-block;
+                margin: 20px 0;
+            }
+            .stats {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 30px;
+            }
+            .stat {
+                background: rgba(255,255,255,0.1);
+                padding: 15px;
+                border-radius: 10px;
+                min-width: 120px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 {{ .Values.demo.message }}</h1>
+            <div class="version">{{ .Values.demo.version }}</div>
+            <p>Environment: <strong>{{ .Values.demo.environment }}</strong></p>
+            <p>Replicas: <strong>{{ .Values.replicaCount }}</strong></p>
+            <p>Namespace: <strong>{{ .Release.Namespace }}</strong></p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <h3>CPU Request</h3>
+                    <p>{{ .Values.resources.requests.cpu }}</p>
+                </div>
+                <div class="stat">
+                    <h3>Memory Request</h3>
+                    <p>{{ .Values.resources.requests.memory }}</p>
+                </div>
+                <div class="stat">
+                    <h3>Max Replicas</h3>
+                    <p>{{ .Values.maxReplicas }}</p>
+                </div>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 14px; opacity: 0.8;">
+                🔄 This page updates automatically when GitOps changes are applied
+            </p>
+        </div>
+    </body>
+    </html>

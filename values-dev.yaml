@@ -1,29 +1,25 @@
-# Dev overlay. CI writes the immutable image digest here.
-image:
-  repository: ghcr.io/arthur-16/ArgoDemo
-  digest: "sha256:REPLACED_BY_CI"
-
+# Development Environment - Optimized for Quick Changes
 replicaCount: 2
 
-# For Minikube demo with NGINX ingress add-on
+demo:
+  message: "GitOps Demo - Development Environment 🚀"
+  version: "dev-v1.0"
+  environment: "development"
+
 ingress:
+  host: demo-dev.local
+
+resources:
+  requests:
+    cpu: 30m
+    memory: 32Mi
+  limits:
+    cpu: 60m
+    memory: 64Mi
+
+# Enable autoscaling for dev environment demos
+autoscaling:
   enabled: true
-  className: nginx                  # minikube addon = nginx
-  annotations: {}
-  # If you DON'T set hosts below, the template will default to: "<release>.local"
-  # Optionally set a baseDomain to change that default to "<release>.<baseDomain>"
-  baseDomain: local                 # results in "<release>.local"
-  # hosts:                          # Optional explicit override example
-  #   - host: demo.local
-  #     paths:
-  #       - path: /
-  #         pathType: Prefix
-
-  tls:
-    enabled: false                  # set true if you add a TLS secret
-    secretName: ""                  # optional; if empty, defaults to "<fullname>-tls"
-
-service:
-  type: ClusterIP
-  port: 80
-containerPort: 8080
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
