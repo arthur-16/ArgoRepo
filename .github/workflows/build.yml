@@ -12,9 +12,9 @@ permissions:
 
 env:
   IMAGE_REPO: ghcr.io/arthur-16/argodemo
-  CHART_PATH: demo
-  VALUES_DEV_FILE: demo/values-dev.yaml
-  VALUES_STAGING_FILE: demo/values-staging.yaml
+  CHART_PATH: .
+  VALUES_DEV_FILE: ./values-dev.yaml
+  VALUES_STAGING_FILE: ./values-staging.yaml
 
 concurrency:
   group: build-and-pin-${{ github.ref }}
