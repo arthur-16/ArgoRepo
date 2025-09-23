@@ -7,11 +7,11 @@ RUN apk add --no-cache \
     jq \
     && rm -rf /var/cache/apk/*
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy custom nginx configuration (path relative to build context - repo root)
+COPY app/nginx.conf /etc/nginx/nginx.conf
 
-# Copy the demo application
-COPY index.html /usr/share/nginx/html/index.html
+# Copy the demo application (path relative to build context - repo root)
+COPY app/index.html /usr/share/nginx/html/index.html
 
 # Add build information (will be replaced by CI)
 ARG BUILD_VERSION=dev
