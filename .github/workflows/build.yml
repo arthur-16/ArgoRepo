@@ -98,7 +98,7 @@ jobs:
           echo "📁 Current directory structure:"
           ls -la
           echo "📁 Demo directory:"
-          ls -la demo/
+          ls -la ./
           echo "📊 Values file info:"
           if [[ -f "${{ env.VALUES_DEV_FILE }}" ]]; then
             echo "✅ File exists: ${{ env.VALUES_DEV_FILE }}"
