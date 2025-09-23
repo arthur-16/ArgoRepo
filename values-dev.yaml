@@ -1,22 +1,22 @@
-<<<<<<< HEAD
-# Development Environment - Optimized for Quick Changes
+# Development Environment - CI/CD Integration with Digest Pinning
 replicaCount: 2
+
+# Dev overlay. CI writes the immutable image digest here.
+image:
+  repository: ghcr.io/arthur-16/argodemo
+  digest: "sha256:REPLACED_BY_CI"
 
 demo:
   message: "GitOps Demo - Development Environment 🚀"
-  version: "dev-v1.0"
+  version: "dev-v1.1-immutable"
   environment: "development"
 
-=======
-# Dev overlay. CI writes the immutable image digest here.
-image:
-  repository: ghcr.io/arthur-16/argorepo
-  digest: "sha256:19fbd935e20196c9c1583e961affc5faa47c8728f2e7bb755ab223de67c8ad56"
-replicaCount: 2
-# For Minikube demo with NGINX ingress add-on
->>>>>>> d69baaabff67a3ff9d3f31d9e8f6eb8a405be7e5
 ingress:
+  enabled: true
+  className: "nginx"
   host: demo-dev.local
+  path: /
+  pathType: Prefix
 
 resources:
   requests:
@@ -26,18 +26,19 @@ resources:
     cpu: 60m
     memory: 64Mi
 
-# Enable autoscaling for dev environment demos
 autoscaling:
   enabled: true
-<<<<<<< HEAD
   minReplicas: 2
   maxReplicas: 8
   targetCPUUtilizationPercentage: 60
-=======
-  className: nginx
-  hosts:
-    - host: demo.local
-      paths:
-        - path: /
-          pathType: Prefix
->>>>>>> d69baaabff67a3ff9d3f31d9e8f6eb8a405be7e5
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+healthcheck:
+  enabled: true
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 10
