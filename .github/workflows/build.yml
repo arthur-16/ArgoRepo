@@ -12,9 +12,9 @@ permissions:
 
 env:
   IMAGE_REPO: ghcr.io/arthur-16/argodemo
-  CHART_PATH: .
-  VALUES_DEV_FILE: ./values-dev.yaml
-  VALUES_STAGING_FILE: ./values-staging.yaml
+  CHART_PATH: demo
+  VALUES_DEV_FILE: demo/values-dev.yaml
+  VALUES_STAGING_FILE: demo/values-staging.yaml
 
 concurrency:
   group: build-and-pin-${{ github.ref }}
@@ -30,10 +30,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Need full history for proper git operations
           fetch-depth: 0
 
-      # Enable emulation so we can build arm64 on x86 runners
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -65,6 +63,10 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            BUILD_VERSION=${{ steps.meta.outputs.short-sha }}
+            BUILD_TIME=${{ steps.meta.outputs.timestamp }}
+            GIT_SHA=${{ github.sha }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -85,48 +87,58 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Use a PAT or github token with write permissions
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Install yq
         uses: mikefarah/yq@v4.44.3
 
-      - name: Pin digest in dev values
-        env:
-          IMAGE_REPO: ${{ env.IMAGE_REPO }}
-          DIGEST: ${{ needs.build.outputs.digest }}
-          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
+      - name: Debug file structure
         run: |
-          echo "🔒 Pinning image digest in development environment"
-          echo "Repository: $IMAGE_REPO"
-          echo "Digest: $DIGEST"
-          echo "Short SHA: $SHORT_SHA"
-          
-          # Verify the values file exists
-          if [[ ! -f "${{ env.VALUES_DEV_FILE }}" ]]; then
-            echo "❌ Values file not found: ${{ env.VALUES_DEV_FILE }}"
-            echo "Available files in root directory:"
-            ls -la demo/ || echo "Demo directory not found"
+          echo "📁 Current directory structure:"
+          ls -la
+          echo "📁 Demo directory:"
+          ls -la demo/
+          echo "📊 Values file info:"
+          if [[ -f "${{ env.VALUES_DEV_FILE }}" ]]; then
+            echo "✅ File exists: ${{ env.VALUES_DEV_FILE }}"
+            echo "File size: $(wc -c < "${{ env.VALUES_DEV_FILE }}") bytes"
+            echo "First 5 lines:"
+            head -5 "${{ env.VALUES_DEV_FILE }}"
+          else
+            echo "❌ File not found: ${{ env.VALUES_DEV_FILE }}"
             exit 1
           fi
+
+      - name: Validate YAML syntax
+        run: |
+          echo "🧪 Testing YAML syntax..."
+          yq eval '.' "${{ env.VALUES_DEV_FILE }}" > /dev/null
+          echo "✅ YAML syntax is valid"
+
+      - name: Pin digest in dev values
+        run: |
+          echo "🔒 Pinning image digest in development environment"
+          echo "Repository: ${{ env.IMAGE_REPO }}"
+          echo "Digest: ${{ needs.build.outputs.digest }}"
+          echo "Short SHA: ${{ needs.build.outputs.short-sha }}"
           
-          # Update the image configuration
-          yq -i '.image.repository = strenv(IMAGE_REPO)' "${{ env.VALUES_DEV_FILE }}"
-          yq -i '.image.digest = strenv(DIGEST)' "${{ env.VALUES_DEV_FILE }}"
+          # Update image configuration (safe from special characters)
+          yq -i '.image.repository = "${{ env.IMAGE_REPO }}"' "${{ env.VALUES_DEV_FILE }}"
+          yq -i '.image.digest = "${{ needs.build.outputs.digest }}"' "${{ env.VALUES_DEV_FILE }}"
           
-          # Update demo version to include SHA for visual confirmation
-          yq -i '.demo.version = "dev-v1.1-" + strenv(SHORT_SHA)' "${{ env.VALUES_DEV_FILE }}"
-          yq -i '.demo.message = "GitOps Demo - Development (' + strenv(SHORT_SHA) + ') 🚀"' "${{ env.VALUES_DEV_FILE }}"
+          # Update version (using safe string without special characters)
+          yq -i '.demo.version = "dev-v1.1-${{ needs.build.outputs.short-sha }}"' "${{ env.VALUES_DEV_FILE }}"
+          
+          # Update message using a safer approach (no parentheses or emoji in CI)
+          yq -i '.demo.message = "GitOps Demo - Development Build ${{ needs.build.outputs.short-sha }}"' "${{ env.VALUES_DEV_FILE }}"
           
           echo "✅ Updated values file:"
           echo "--- ${{ env.VALUES_DEV_FILE }} ---"
-          cat "${{ env.VALUES_DEV_FILE }}"
+          yq eval '.image' "${{ env.VALUES_DEV_FILE }}"
+          yq eval '.demo' "${{ env.VALUES_DEV_FILE }}"
 
       - name: Commit and push changes
-        env:
-          DIGEST: ${{ needs.build.outputs.digest }}
-          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
         run: |
           git config user.name "ci-bot"
           git config user.email "ci@arthur-16.github.io"
@@ -137,10 +149,13 @@ jobs:
             exit 0
           fi
           
+          echo "📝 Changes made:"
+          git diff "${{ env.VALUES_DEV_FILE }}"
+          
           git add "${{ env.VALUES_DEV_FILE }}"
-          git commit -m "🔒 Pin dev image to ${SHORT_SHA}
+          git commit -m "🔒 Pin dev image to ${{ needs.build.outputs.short-sha }}
 
-          Digest: ${DIGEST}
+          Image: ${{ env.IMAGE_REPO }}@${{ needs.build.outputs.digest }}
           
           This commit was automatically generated by CI to pin the
           development environment to an immutable image digest."
@@ -165,7 +180,6 @@ jobs:
     needs: [build, update-dev]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    # Add manual approval for staging promotions
     environment: staging
     steps:
       - name: Checkout
@@ -178,10 +192,6 @@ jobs:
         uses: mikefarah/yq@v4.44.3
 
       - name: Promote to staging
-        env:
-          IMAGE_REPO: ${{ env.IMAGE_REPO }}
-          DIGEST: ${{ needs.build.outputs.digest }}
-          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
         run: |
           echo "🎯 Promoting to staging environment"
           
@@ -195,21 +205,18 @@ jobs:
           fi
           
           # Update staging with the same digest as dev
-          yq -i '.image.repository = strenv(IMAGE_REPO)' "${{ env.VALUES_STAGING_FILE }}"
-          yq -i '.image.digest = strenv(DIGEST)' "${{ env.VALUES_STAGING_FILE }}"
+          yq -i '.image.repository = "${{ env.IMAGE_REPO }}"' "${{ env.VALUES_STAGING_FILE }}"
+          yq -i '.image.digest = "${{ needs.build.outputs.digest }}"' "${{ env.VALUES_STAGING_FILE }}"
           
-          # Update staging version info
-          yq -i '.demo.version = "staging-v1.1-" + strenv(SHORT_SHA)' "${{ env.VALUES_STAGING_FILE }}"
-          yq -i '.demo.message = "GitOps Demo - Staging (' + strenv(SHORT_SHA) + ') 🎯"' "${{ env.VALUES_STAGING_FILE }}"
+          # Update staging version info (safe strings only)
+          yq -i '.demo.version = "staging-v1.1-${{ needs.build.outputs.short-sha }}"' "${{ env.VALUES_STAGING_FILE }}"
+          yq -i '.demo.message = "GitOps Demo - Staging Build ${{ needs.build.outputs.short-sha }}"' "${{ env.VALUES_STAGING_FILE }}"
           
           echo "✅ Updated staging values file:"
-          echo "--- ${{ env.VALUES_STAGING_FILE }} ---"
-          cat "${{ env.VALUES_STAGING_FILE }}"
+          yq eval '.image' "${{ env.VALUES_STAGING_FILE }}"
+          yq eval '.demo' "${{ env.VALUES_STAGING_FILE }}"
 
       - name: Commit staging promotion
-        env:
-          DIGEST: ${{ needs.build.outputs.digest }}
-          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
         run: |
           git config user.name "ci-bot"
           git config user.email "ci@arthur-16.github.io"
@@ -220,37 +227,25 @@ jobs:
           fi
           
           git add "${{ env.VALUES_STAGING_FILE }}"
-          git commit -m "🎯 Promote ${SHORT_SHA} to staging
+          git commit -m "🎯 Promote ${{ needs.build.outputs.short-sha }} to staging
 
-          Digest: ${DIGEST}
+          Image: ${{ env.IMAGE_REPO }}@${{ needs.build.outputs.digest }}
           
           Promoting the same immutable image digest from development
           to staging environment after successful testing."
           
           git push origin main
 
-  # Optional: Slack/Teams notification
   notify:
     needs: [build, update-dev, promote-to-staging]
     runs-on: ubuntu-latest
     if: always() && github.ref == 'refs/heads/main'
     steps:
-      - name: Notification
-        env:
-          BUILD_STATUS: ${{ needs.build.result }}
-          DEV_STATUS: ${{ needs.update-dev.result }}
-          STAGING_STATUS: ${{ needs.promote-to-staging.result }}
-          DIGEST: ${{ needs.build.outputs.digest }}
-          SHORT_SHA: ${{ needs.build.outputs.short-sha }}
+      - name: Pipeline Summary
         run: |
           echo "📊 Pipeline Results:"
-          echo "  🔨 Build: $BUILD_STATUS"
-          echo "  🚀 Dev Update: $DEV_STATUS"
-          echo "  🎯 Staging Promotion: $STAGING_STATUS"
-          echo "  📦 Image: ${{ env.IMAGE_REPO }}@$DIGEST"
-          echo "  🏷️ SHA: $SHORT_SHA"
-          
-          # Add your notification logic here (Slack, Teams, email, etc.)
-          # Example for webhook notifications:
-          # curl -X POST "your-webhook-url" -d "Deploy completed: $SHORT_SHA"
-
+          echo "  🔨 Build: ${{ needs.build.result }}"
+          echo "  🚀 Dev Update: ${{ needs.update-dev.result }}"
+          echo "  🎯 Staging Promotion: ${{ needs.promote-to-staging.result }}"
+          echo "  📦 Image: ${{ env.IMAGE_REPO }}@${{ needs.build.outputs.digest }}"
+          echo "  🏷️ SHA: ${{ needs.build.outputs.short-sha }}"
