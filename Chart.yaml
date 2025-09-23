@@ -1,6 +1,5 @@
 apiVersion: v2
 name: demo
-<<<<<<< HEAD:chart.yaml
 description: GitOps Demo Application - Live Scaling & Updates
 type: application
 version: 1.0.0
@@ -12,9 +11,3 @@ keywords:
   - scaling
 maintainers:
   - name: Demo Team
-=======
-version: 0.1.0
-appVersion: "1.16.0"
-description: Small demo app chart, immutable-by-digest, Argo CD friendly
-type: application
->>>>>>> d69baaabff67a3ff9d3f31d9e8f6eb8a405be7e5:Chart.yaml
