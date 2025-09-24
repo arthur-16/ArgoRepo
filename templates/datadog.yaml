@@ -1,0 +1,22 @@
+{{- if .Values.datadog.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ include "demo.fullname" . }}-datadog
+spec:
+  project: default
+  source:
+    repoURL: https://helm.datadoghq.com
+    chart: datadog
+    targetRevision: "3.118.3"
+    helm:
+      valuesObject:
+        datadog:
+          site: {{ .Values.datadog.site }}
+          clusterName: {{ .Values.datadog.clusterName }}
+          tags: {{ .Values.datadog.tags | toYaml | nindent 12 }}
+          apiKeyExistingSecret: "datadog-secret"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: datadog
+{{- end }}
