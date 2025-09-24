@@ -4,12 +4,13 @@ replicaCount: 2
 image:
   repository: ghcr.io/arthur-16/argodemo
   tag: "1.21-alpine"
-  digest: "sha256:d5bddc3f2b42beeab22a19cb8a2a6c91d123ea485dc52f8146ef3be38604e99c" # CI will populate this when your custom image is built
+  digest: "sha256:12efcf2fe5742eb85cc5d8dc0c3e1918ae287e817225d0bde048b61fc03c1c49" # CI will populate this when your custom image is built
   pullPolicy: IfNotPresent
 demo:
-  message: "GitOps Demo - Development Build 31a1237dba1b"
-  version: "dev-v1.1-31a1237dba1b"
+  message: "GitOps Demo - Development Build d9624e439bc6"
+  version: "dev-v1.1-d9624e439bc6"
   environment: "development"
+<<<<<<< HEAD
 
 # datadog:
 #   site: "PLACEHOLDER_DD_SITE"
@@ -61,6 +62,57 @@ demo:
 #   kubeStateMetricsCore:
 #     enabled: true
 
+=======
+datadog:
+  site: "PLACEHOLDER_DD_SITE"
+  clusterName: "PLACEHOLDER_DD_CLUSTER"
+  apiKeyExistingSecret: "datadog-secret"
+  tags:
+    - "env:production-demo"
+    - "cluster:minikube"
+  kubelet:
+    tlsVerify: false
+  apm:
+    instrumentation:
+      enabled: true
+      targets:
+        - name: "default-target"
+          ddTraceVersions:
+            python: "3"
+            nodejs: "5"
+            java: "1"
+    portEnabled: true
+    port: 8126
+  logs:
+    enabled: true
+    containerCollectAll: true
+    autoMultiLine: true
+  processAgent:
+    enabled: true
+    processCollection: true
+  orchestratorExplorer:
+    enabled: true
+  clusterAgent:
+    enabled: true
+    replicas: 2
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 200m
+        memory: 512Mi
+  agents:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 200m
+        memory: 512Mi
+  kubeStateMetricsCore:
+    enabled: true
+>>>>>>> 46b58606474ecaae41228fb88ec2830a0833a1dd
 service:
   type: ClusterIP
   port: 80

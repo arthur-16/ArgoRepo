@@ -4,11 +4,11 @@ replicaCount: 3
 image:
   repository: ghcr.io/arthur-16/argodemo
   tag: "1.21-alpine"
-  digest: "sha256:d5bddc3f2b42beeab22a19cb8a2a6c91d123ea485dc52f8146ef3be38604e99c" # CI will populate this when your custom image is built
+  digest: "sha256:12efcf2fe5742eb85cc5d8dc0c3e1918ae287e817225d0bde048b61fc03c1c49" # CI will populate this when your custom image is built
   pullPolicy: IfNotPresent
 demo:
-  message: "GitOps Demo - Staging Build 31a1237dba1b"
-  version: "staging-v1.1-31a1237dba1b"
+  message: "GitOps Demo - Staging Build d9624e439bc6"
+  version: "staging-v1.1-d9624e439bc6"
   environment: "staging"
 service:
   type: ClusterIP
