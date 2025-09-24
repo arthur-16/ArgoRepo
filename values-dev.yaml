@@ -11,55 +11,55 @@ demo:
   version: "dev-v1.1-31a1237dba1b"
   environment: "development"
 
-datadog:
-  site: "PLACEHOLDER_DD_SITE"
-  clusterName: "PLACEHOLDER_DD_CLUSTER"
-  apiKeyExistingSecret: "datadog-secret"
-  tags:
-    - "env:production-demo"
-    - "cluster:minikube"
-  kubelet:
-    tlsVerify: false
-  apm:
-    instrumentation:
-      enabled: true
-      targets:
-        - name: "default-target"
-          ddTraceVersions:
-            python: "3"
-            nodejs: "5"
-            java: "1"
-    portEnabled: true
-    port: 8126
-  logs:
-    enabled: true
-    containerCollectAll: true
-    autoMultiLine: true
-  processAgent:
-    enabled: true
-    processCollection: true
-  orchestratorExplorer:
-    enabled: true
-  clusterAgent:
-    enabled: true
-    replicas: 2
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 200m
-        memory: 512Mi
-  agents:
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 200m
-        memory: 512Mi
-  kubeStateMetricsCore:
-    enabled: true
+# datadog:
+#   site: "PLACEHOLDER_DD_SITE"
+#   clusterName: "PLACEHOLDER_DD_CLUSTER"
+#   apiKeyExistingSecret: "datadog-secret"
+#   tags:
+#     - "env:production-demo"
+#     - "cluster:minikube"
+#   kubelet:
+#     tlsVerify: false
+#   apm:
+#     instrumentation:
+#       enabled: true
+#       targets:
+#         - name: "default-target"
+#           ddTraceVersions:
+#             python: "3"
+#             nodejs: "5"
+#             java: "1"
+#     portEnabled: true
+#     port: 8126
+#   logs:
+#     enabled: true
+#     containerCollectAll: true
+#     autoMultiLine: true
+#   processAgent:
+#     enabled: true
+#     processCollection: true
+#   orchestratorExplorer:
+#     enabled: true
+#   clusterAgent:
+#     enabled: true
+#     replicas: 2
+#     resources:
+#       requests:
+#         cpu: 100m
+#         memory: 256Mi
+#       limits:
+#         cpu: 200m
+#         memory: 512Mi
+#   agents:
+#     resources:
+#       requests:
+#         cpu: 100m
+#         memory: 256Mi
+#       limits:
+#         cpu: 200m
+#         memory: 512Mi
+#   kubeStateMetricsCore:
+#     enabled: true
 
 service:
   type: ClusterIP
