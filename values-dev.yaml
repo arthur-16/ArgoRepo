@@ -10,7 +10,6 @@ demo:
   message: "GitOps Demo - Development Build 31a1237dba1b"
   version: "dev-v1.1-31a1237dba1b"
   environment: "development"
-<<<<<<< HEAD
 
 datadog:
   site: "PLACEHOLDER_DD_SITE"
@@ -62,8 +61,6 @@ datadog:
   kubeStateMetricsCore:
     enabled: true
 
-=======
->>>>>>> 47e07841cd25f194e15b9f008b421c593a61f9e5
 service:
   type: ClusterIP
   port: 80
