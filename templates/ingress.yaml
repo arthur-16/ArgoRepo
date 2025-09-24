@@ -7,11 +7,6 @@ metadata:
     {{- include "demo.labels" . | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      location /demo {
-        root /usr/share/nginx/html;
-        try_files $uri $uri/ =404;
-      }
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

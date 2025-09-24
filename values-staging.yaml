@@ -1,13 +1,31 @@
-# Staging Environment - Production-like Configuration
+# Staging Environment - Working Configuration
 replicaCount: 3
 
+# Use working public image (CI can update this later)
+image:
+  repository: nginx
+  tag: "1.21-alpine"
+  digest: ""  # CI will populate this when your custom image is built
+  pullPolicy: IfNotPresent
+
 demo:
-  message: "GitOps Demo - Staging Environment 🎯"
-  version: "staging-v1.0"
+  message: "GitOps Demo - Staging Environment"
+  version: "staging-v1.1-working"
   environment: "staging"
 
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
 ingress:
-  host: demo-staging.local
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  host: demo-0-staging.local
+  path: /
+  pathType: Prefix
 
 resources:
   requests:
@@ -22,3 +40,9 @@ autoscaling:
   minReplicas: 3
   maxReplicas: 12
   targetCPUUtilizationPercentage: 70
+
+healthcheck:
+  enabled: true
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 10

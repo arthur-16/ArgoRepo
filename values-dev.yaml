@@ -1,20 +1,28 @@
-# Development Environment - CI/CD Integration with Digest Pinning
 replicaCount: 2
 
-# Dev overlay. CI writes the immutable image digest here.
+# Use working public image (CI can update this later)
 image:
-  repository: ghcr.io/arthur-16/argodemo
-  digest: "sha256:REPLACED_BY_CI"
+  repository: nginx
+  tag: "1.21-alpine"
+  digest: ""  # CI will populate this when your custom image is built
+  pullPolicy: IfNotPresent
 
 demo:
-  message: "GitOps Demo - Development Environment 🚀"
-  version: "dev-v1.1-immutable"
+  message: "GitOps Demo - Development Environment"
+  version: "dev-v1.1-working"
   environment: "development"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
 
 ingress:
   enabled: true
   className: "nginx"
-  host: demo-dev.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  host: demo-0-dev.local
   path: /
   pathType: Prefix
 
@@ -31,11 +39,6 @@ autoscaling:
   minReplicas: 2
   maxReplicas: 8
   targetCPUUtilizationPercentage: 60
-
-service:
-  type: ClusterIP
-  port: 80
-  targetPort: 80
 
 healthcheck:
   enabled: true
