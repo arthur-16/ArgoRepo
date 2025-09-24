@@ -1,5 +1,6 @@
 # Staging Environment - Working Configuration
 replicaCount: 3
+<<<<<<< HEAD
 
 # Use working public image (CI can update this later)
 image:
@@ -27,6 +28,14 @@ ingress:
   path: /
   pathType: Prefix
 
+=======
+demo:
+  message: "GitOps Demo - Staging Build 57f80b655c46"
+  version: "staging-v1.1-57f80b655c46"
+  environment: "staging"
+ingress:
+  host: demo-staging.local
+>>>>>>> 5acf6c8df5cce68fce1994debbd1a914fba2251d
 resources:
   requests:
     cpu: 75m
@@ -34,15 +43,20 @@ resources:
   limits:
     cpu: 150m
     memory: 192Mi
-
 autoscaling:
   enabled: true
   minReplicas: 3
   maxReplicas: 12
   targetCPUUtilizationPercentage: 70
+<<<<<<< HEAD
 
 healthcheck:
   enabled: true
   path: /
   initialDelaySeconds: 10
   periodSeconds: 10
+=======
+image:
+  repository: ghcr.io/arthur-16/argodemo
+  digest: sha256:df089cfbc72adf0a2c5786c26d55a8ce5453645f2ef312fd63377ccd77ffc675
+>>>>>>> 5acf6c8df5cce68fce1994debbd1a914fba2251d

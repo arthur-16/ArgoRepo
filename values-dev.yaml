@@ -1,4 +1,5 @@
 replicaCount: 2
+<<<<<<< HEAD
 
 # Use working public image (CI can update this later)
 image:
@@ -17,6 +18,16 @@ service:
   port: 80
   targetPort: 80
 
+=======
+# Dev overlay. CI writes the immutable image digest here.
+image:
+  repository: ghcr.io/arthur-16/argodemo
+  digest: "sha256:df089cfbc72adf0a2c5786c26d55a8ce5453645f2ef312fd63377ccd77ffc675"
+demo:
+  message: "GitOps Demo - Development Build 57f80b655c46"
+  version: "dev-v1.1-57f80b655c46"
+  environment: "development"
+>>>>>>> 5acf6c8df5cce68fce1994debbd1a914fba2251d
 ingress:
   enabled: true
   className: "nginx"
@@ -25,7 +36,6 @@ ingress:
   host: demo-0-dev.local
   path: /
   pathType: Prefix
-
 resources:
   requests:
     cpu: 30m
@@ -33,13 +43,19 @@ resources:
   limits:
     cpu: 60m
     memory: 64Mi
-
 autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 8
   targetCPUUtilizationPercentage: 60
+<<<<<<< HEAD
 
+=======
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+>>>>>>> 5acf6c8df5cce68fce1994debbd1a914fba2251d
 healthcheck:
   enabled: true
   path: /
