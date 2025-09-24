@@ -1,17 +1,16 @@
 # Development Environment - Working Configuration
 replicaCount: 2
-
 # Use working public image (CI can update this later)
 image:
-  repository: nginx
+  repository: ghcr.io/arthur-16/argodemo
   tag: "1.21-alpine"
-  digest: ""  # CI will populate this when your custom image is built
+  digest: "sha256:d5bddc3f2b42beeab22a19cb8a2a6c91d123ea485dc52f8146ef3be38604e99c" # CI will populate this when your custom image is built
   pullPolicy: IfNotPresent
-
 demo:
-  message: "GitOps Demo - Development Environment"
-  version: "dev-v1.1-working"
+  message: "GitOps Demo - Development Build 31a1237dba1b"
+  version: "dev-v1.1-31a1237dba1b"
   environment: "development"
+<<<<<<< HEAD
 
 datadog:
   site: "PLACEHOLDER_DD_SITE"
@@ -63,11 +62,12 @@ datadog:
   kubeStateMetricsCore:
     enabled: true
 
+=======
+>>>>>>> 47e07841cd25f194e15b9f008b421c593a61f9e5
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
-
 ingress:
   enabled: true
   className: "nginx"
@@ -76,7 +76,6 @@ ingress:
   host: demo-0-dev.local
   path: /
   pathType: Prefix
-
 resources:
   requests:
     cpu: 30m
@@ -84,13 +83,11 @@ resources:
   limits:
     cpu: 60m
     memory: 64Mi
-
 autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 8
   targetCPUUtilizationPercentage: 60
-
 healthcheck:
   enabled: true
   path: /
